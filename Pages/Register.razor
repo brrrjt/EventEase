@@ -1,0 +1,62 @@
+@page "/register"
+@using EventEase.Models
+@inject NavigationManager Navigation
+@inject EventEase.Services.RegistrationService RegistrationService
+@inject EventEase.Services.EventService EventService
+
+<h1>Register for an Event</h1>
+
+<EditForm Model="@registration" OnValidSubmit="HandleSubmit">
+    <DataAnnotationsValidator />
+    <ValidationSummary />
+
+    <div class="mb-3">
+        <label>Name:</label>
+        <InputText class="form-control" @bind-Value="registration.Name" />
+    </div>
+
+    <div class="mb-3">
+        <label>Email:</label>
+        <InputText class="form-control" @bind-Value="registration.Email" />
+    </div>
+
+    <div class="mb-3">
+        <label>Select Event:</label>
+        <InputSelect class="form-control" @bind-Value="registration.EventId" required>
+            <option value="">-- Choose an event --</option>
+            @foreach (var evt in EventService.GetEvents())
+            {
+                <option value="@evt.Id">@evt.Name (@evt.Date.ToShortDateString())</option>
+            }
+        </InputSelect>
+        <ValidationMessage For="@(() => registration.EventId)" />
+    </div>
+
+    <button type="submit" class="btn btn-success">Register</button>
+</EditForm>
+
+@if (submitted)
+{
+    <div class="alert alert-success mt-3 text-center fw-bold">
+        ✅ You’re officially registered for <strong>@selectedEvent?.Name</strong>!
+    </div>
+
+    <a href="/events" class="btn btn-outline-primary mt-3">Back to Events</a>
+}
+
+@code {
+    RegistrationModel registration = new();
+    bool submitted = false;
+    EventModel? selectedEvent;
+
+    void HandleSubmit()
+    {
+        submitted = true;
+        selectedEvent = EventService.GetEventById(registration.EventId);
+
+        if (selectedEvent != null)
+        {
+            RegistrationService.RegisterEvent(selectedEvent.Id, registration);
+        }
+    }
+}

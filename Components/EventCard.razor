@@ -1,0 +1,88 @@
+@using EventEase.Models
+@inject EventEase.Services.EventService EventService
+
+<div class="card m-3 p-3 shadow-sm">
+    @if (isEditing)
+    {
+        <div>
+            <label>Event Name:</label>
+            <input class="form-control mb-2" @bind="editableEvent.Name" />
+
+            <label>Date:</label>
+            <input type="date" class="form-control mb-2" @bind="editableEvent.Date" />
+
+            <label>Location:</label>
+            <input class="form-control mb-2" @bind="editableEvent.Location" />
+
+            <button class="btn btn-success me-2" @onclick="SaveChanges">Save</button>
+            <button class="btn btn-secondary" @onclick="CancelEdit">Cancel</button>
+        </div>
+    }
+    else
+    {
+        <h4>@(string.IsNullOrWhiteSpace(Event.Name) ? "Unnamed Event" : Event.Name)</h4>
+        <p><strong>Date:</strong> @(Event.Date != default ? Event.Date.ToShortDateString() : "TBD")</p>
+        <p><strong>Location:</strong> @(string.IsNullOrWhiteSpace(Event.Location) ? "Unknown" : Event.Location)</p>
+
+        @if (IsRegistered)
+        {
+            <span class="badge bg-success">Registered</span>
+        }
+
+        <a href="/eventdetails/@Event.Id" class="btn btn-primary mt-2 me-2">View Details</a>
+
+        @if (ShowEdit)
+        {
+            <button class="btn btn-outline-warning mt-2" @onclick="EnterEditMode">Edit</button>
+        }
+    }
+</div>
+
+@code {
+    [Parameter] public EventModel? Event { get; set; }
+    [Parameter] public bool IsRegistered { get; set; }
+    [Parameter] public bool ShowEdit { get; set; }
+
+    private bool isEditing = false;
+    private EventModel editableEvent = new();
+
+    protected override void OnParametersSet()
+    {
+        // Exit edit mode if admin mode is turned off
+        if (!ShowEdit && isEditing)
+        {
+            isEditing = false;
+        }
+    }
+
+    private void EnterEditMode()
+    {
+        if (Event != null)
+        {
+            editableEvent = new EventModel
+            {
+                Id = Event.Id,
+                Name = Event.Name,
+                Date = Event.Date,
+                Location = Event.Location
+            };
+            isEditing = true;
+        }
+    }
+
+    private void SaveChanges()
+    {
+        if (Event != null)
+        {
+            Event.Name = editableEvent.Name;
+            Event.Date = editableEvent.Date;
+            Event.Location = editableEvent.Location;
+        }
+        isEditing = false;
+    }
+
+    private void CancelEdit()
+    {
+        isEditing = false;
+    }
+}

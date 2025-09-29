@@ -1,0 +1,86 @@
+@page "/myregistrations"
+@using EventEase.Models
+@inject EventEase.Services.RegistrationService RegistrationService
+@inject EventEase.Services.EventService EventService
+
+<style>
+    .badge-pointer {
+        cursor: pointer;
+        transition: transform 0.2s ease;
+    }
+
+    .badge-upcoming:hover {
+        transform: scale(1.1);
+    }
+</style>
+
+<h1>Attendance Tracker</h1>
+<p class="lead">Here are the events you've registered for:</p>
+
+@if (registeredEvents.Count == 0)
+{
+    <p>You haven’t registered for any events yet.</p>
+    <a href="/events" class="btn btn-primary mt-2">Register Now</a>
+}
+else
+{
+    <ul class="list-group mt-3">
+        @foreach (var evt in registeredEvents)
+        {
+            <li class="list-group-item d-flex justify-content-between align-items-center">
+                <div>
+                    <strong>@evt.Name</strong><br />
+                    <small>@evt.Date.ToShortDateString() — @evt.Location</small>
+                </div>
+                <span class="badge badge-pointer @GetStatusBadgeClass(evt) @(IsUpcoming(evt) ? "badge-upcoming" : "")"
+                      title="@GetStatusTooltip(evt)">
+                    @GetStatusLabel(evt)
+                </span>
+            </li>
+        }
+    </ul>
+}
+
+@code {
+    private List<EventModel> registeredEvents = new();
+
+    protected override void OnInitialized()
+    {
+        var allEvents = EventService.GetEvents();
+        var registeredIds = RegistrationService.GetRegisteredEventIds();
+        registeredEvents = allEvents.Where(e => registeredIds.Contains(e.Id)).ToList();
+
+        // Add 5 mock past events with attendance status
+        registeredEvents.InsertRange(0, new List<EventModel>
+        {
+            new EventModel { Id = 101, Name = "AI Bootcamp", Date = DateTime.Now.AddDays(-30), Location = "Cebu" },
+            new EventModel { Id = 102, Name = "Design Thinking Workshop", Date = DateTime.Now.AddDays(-25), Location = "Davao" },
+            new EventModel { Id = 103, Name = "Startup Pitch Fest", Date = DateTime.Now.AddDays(-20), Location = "Manila" },
+            new EventModel { Id = 104, Name = "Cloud Dev Summit", Date = DateTime.Now.AddDays(-15), Location = "Cagayan de Oro" },
+            new EventModel { Id = 105, Name = "Cybersecurity Forum", Date = DateTime.Now.AddDays(-10), Location = "Iloilo" }
+        });
+    }
+
+    private string GetStatusLabel(EventModel evt)
+    {
+        if (evt.Id == 105) return "Missed";
+        if (evt.Date < DateTime.Now) return "Attended";
+        return "Upcoming";
+    }
+
+    private string GetStatusBadgeClass(EventModel evt)
+    {
+        if (evt.Id == 105) return "bg-danger";
+        if (evt.Date < DateTime.Now) return "bg-success";
+        return "bg-info";
+    }
+
+    private string GetStatusTooltip(EventModel evt)
+    {
+        if (evt.Id == 105) return "You missed this event";
+        if (evt.Date < DateTime.Now) return "You attended this event";
+        return "You can mark this event as attended or missed on the day of the event.";
+    }
+
+    private bool IsUpcoming(EventModel evt) => evt.Date >= DateTime.Now && evt.Id != 105;
+}

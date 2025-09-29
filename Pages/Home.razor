@@ -1,0 +1,39 @@
+﻿@page "/"
+@using EventEase.Models
+@inject EventEase.Services.RegistrationService RegistrationService
+@inject EventEase.Services.EventService EventService
+
+<h1>Welcome to EventEase 🎉</h1>
+<p class="lead">Your personalized event dashboard</p>
+
+@if (registeredEvents.Count == 0)
+{
+    <div class="alert alert-info mt-4">
+        You haven’t registered for any events yet.
+    </div>
+    <a href="/events" class="btn btn-primary mt-2">Explore Events</a>
+}
+else
+{
+    <h3 class="mt-4">🎟️ Your Registered Events</h3>
+    <ul class="list-group mt-2">
+        @foreach (var evt in registeredEvents)
+        {
+            <li class="list-group-item">
+                <strong>@evt.Name</strong> — @evt.Date.ToShortDateString() in @evt.Location
+            </li>
+        }
+    </ul>
+    <a href="/events" class="btn btn-outline-primary mt-3">Browse More Events</a>
+}
+
+@code {
+    private List<EventModel> registeredEvents = new();
+
+    protected override void OnInitialized()
+    {
+        var allEvents = EventService.GetEvents();
+        var registeredIds = RegistrationService.GetRegisteredEventIds();
+        registeredEvents = allEvents.Where(e => registeredIds.Contains(e.Id)).ToList();
+    }
+}

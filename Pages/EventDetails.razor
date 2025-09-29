@@ -1,0 +1,28 @@
+@page "/eventdetails/{id:int}"
+@using EventEase.Models
+@inject EventEase.Services.EventService EventService
+
+<h1>Event Details</h1>
+
+@if (eventData != null)
+{
+    <p><strong>Name:</strong> @eventData.Name</p>
+    <p><strong>Date:</strong> @eventData.Date.ToShortDateString()</p>
+    <p><strong>Location:</strong> @eventData.Location</p>
+    <a href="/events" class="btn btn-secondary">Back to Events</a>
+    <a href="/register" class="btn btn-secondary">Register for Event</a>
+}
+else
+{
+    <p>Loading...</p>
+}
+
+@code {
+    [Parameter] public int id { get; set; }
+    EventModel? eventData;
+
+    protected override void OnInitialized()
+    {
+        eventData = EventService.GetEventById(id);
+    }
+}

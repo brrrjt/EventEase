@@ -1,0 +1,47 @@
+@page "/events"
+@using EventEase.Models
+@using EventEase.Components
+@inject EventEase.Services.RegistrationService RegistrationService
+@inject EventEase.Services.EventService EventService
+
+<h1 class="d-flex justify-content-between align-items-center">
+    Upcoming Events
+    <button class="btn btn-sm @(isAdmin ? "btn-danger" : "btn-warning")"
+            title="for admins only"
+            @onclick="ToggleAdminMode">
+        @(isAdmin ? "Stop Editing" : "Edit Events")
+    </button>
+</h1>
+
+@if (isAdmin)
+{
+    <div class="alert alert-success mt-2">You're an admin</div>
+}
+
+@if (events == null || events.Count == 0)
+{
+    <p>No events available at the moment.</p>
+}
+else
+{
+    @foreach (var evt in events)
+    {
+        var isRegistered = RegistrationService.IsRegistered(evt.Id);
+        <EventCard Event="evt" IsRegistered="@isRegistered" ShowEdit="@isAdmin" />
+    }
+}
+
+@code {
+    private List<EventModel> events = new();
+    private bool isAdmin = false;
+
+    protected override void OnInitialized()
+    {
+        events = EventService.GetEvents();
+    }
+
+    private void ToggleAdminMode()
+    {
+        isAdmin = !isAdmin;
+    }
+}
